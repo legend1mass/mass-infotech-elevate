@@ -1,14 +1,36 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Mail, Phone, MapPin, Send } from "lucide-react";
+import { Mail, MapPin, Send, CheckCircle } from "lucide-react";
 
 const ContactSection = () => {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // For now, just reset
-    setForm({ name: "", email: "", message: "" });
+    setSubmitting(true);
+    try {
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          access_key: "fd185cd3-dc08-420d-bad6-266c13d8e1b8",
+          name: form.name,
+          email: form.email,
+          message: form.message,
+        }),
+      });
+      if (res.ok) {
+        setSubmitted(true);
+        setForm({ name: "", email: "", message: "" });
+        setTimeout(() => setSubmitted(false), 4000);
+      }
+    } catch {
+      // silent fail
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -60,16 +82,15 @@ const ContactSection = () => {
                 required
               />
             </div>
-            <Button variant="hero" size="lg" type="submit" className="w-full text-base">
-              Send Message <Send size={18} />
+            <Button variant="hero" size="lg" type="submit" className="w-full text-base" disabled={submitting}>
+              {submitted ? <><CheckCircle size={18} /> Message Sent!</> : submitting ? "Sending..." : <>Send Message <Send size={18} /></>}
             </Button>
           </form>
 
           {/* Contact Info */}
           <div className="flex flex-col justify-center gap-8">
             {[
-              { icon: Mail, label: "Email", value: "hello@massinfotech.com" },
-              { icon: Phone, label: "Phone", value: "+91 98765 43210" },
+              { icon: Mail, label: "Email", value: "admin@techmass.online" },
               { icon: MapPin, label: "Location", value: "Bangalore, India" },
             ].map((c) => (
               <div key={c.label} className="flex items-start gap-4">
